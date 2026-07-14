@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Documentation & Articles Portal</title>
+    <style>
+        /* Base Reset & Layout */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            display: flex;
+            height: 100vh;
+            color: #333;
+            background-color: #f9f9f9;
+        }
+
+        /* Sidebar Styling */
+        .sidebar {
+            width: 280px;
+            background-color: #fff;
+            border-right: 1px solid #e5e5e5;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+        .sidebar-header {
+            padding: 20px;
+            font-size: 1.2rem;
+            font-weight: 700;
+            border-bottom: 1px solid #e5e5e5;
+        }
+        .article-list {
+            list-style: none;
+            padding: 10px 0;
+        }
+        .article-link {
+            display: block;
+            padding: 12px 20px;
+            color: #4a5568;
+            text-decoration: none;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .article-link:hover {
+            background-color: #f7fafc;
+            color: #3182ce;
+        }
+        .article-link.active {
+            background-color: #ebf8ff;
+            color: #2b6cb0;
+            font-weight: 600;
+            border-left: 4px solid #3182ce;
+            padding-left: 16px; /* Balance the border width */
+        }
+
+        /* Main Content Viewport */
+        .content-area {
+            flex: 1;
+            padding: 40px;
+            overflow-y: auto;
+            background-color: #fff;
+        }
+        .article-body {
+            max-width: 800px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+        
+        /* Loading & Error States */
+        .loading {
+            color: #a0aec0;
+            font-style: italic;
+        }
+        .error-msg {
+            color: #e53e3e;
+            padding: 20px;
+            background: #fff5f5;
+            border-radius: 6px;
+            border: 1px solid #fed7d7;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- SIDEBAR ARCHITECTURE -->
+    <aside class="sidebar">
+        <div class="sidebar-header">Knowledge Base</div>
+        <ul class="article-list">
+            <!-- You can add up to 100+ items here easily. Just change data-filename -->
+            <li><a class="article-link" data-filename="article1.html">Introduction to the System</a></li>
+            <li><a class="article-link" data-filename="article2.html">Getting Started Guide</a></li>
+            <li><a class="article-link" data-filename="article3.html">Advanced Configurations</a></li>
+            <li><a class="article-link" data-filename="article4.html">Troubleshooting Common Issues</a></li>
+            <!-- Add more as needed: article5.html, article6.html... -->
+        </ul>
+    </aside>
+
+    <!-- CONTENT DISPLAY VIEWPORT -->
+    <main class="content-area">
+        <article class="article-body" id="content-viewport">
+            <!-- DEFAULT GENERAL DESCRIPTION (Shows when nothing is clicked) -->
+            <h1>Welcome to the Knowledge Hub</h1>
+            <p style="margin-top: 20px; font-size: 1.1rem; color: #4a5568;">
+                Select any article from the sidebar menu on the left to pull its full content instantly into this workspace. 
+                This centralized platform contains over 100 modules designed to walk you step-by-step through our architecture, setup guides, and operational guidelines.
+            </p>
+        </article>
+    </main>
+
+    <!-- ASYNCHRONOUS CONTENT ROUTER -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const links = document.querySelectorAll('.article-link');
+            const viewport = document.getElementById('content-viewport');
+
+            links.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    
+                    // 1. Visually manage active class state
+                    links.forEach(l => l.classList.remove('active'));
+                    this.classList.add('active');
+
+                    // 2. Fetch target file name from custom dataset attribute
+                    const fileName = this.getAttribute('data-filename');
+                    
+                    // 3. Optional: Show quick visual feedback while fetching
+                    viewport.innerHTML = '<p class="loading">Loading content...</p>';
+
+                    // 4. Fire Fetch request into your local /articles folder
+                    fetch(`articles/${fileName}`)
+                        .then(response => {
+                            if (!response.ok) {
+                                throw new Error(`Could not find "${fileName}" inside the articles folder.`);
+                            }
+                            return response.text(); // Convert raw text stream to parseable HTML string
+                        })
+                        .then(htmlContent => {
+                            // 5. Safely inject the loaded template fragment directly into the page layout
+                            viewport.innerHTML = htmlContent;
+                        })
+                        .catch(error => {
+                            viewport.innerHTML = `
+                                <div class="error-msg">
+                                    <h3>Failed to load document</h3>
+                                    <p>${error.message}</p>
+                                </div>`;
+                        });
+                });
+            });
+        });
+    </script>
+</body>
+</html>
