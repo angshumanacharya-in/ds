@@ -88,23 +88,18 @@
 </head>
 <body>
 
-    <!-- SIDEBAR ARCHITECTURE -->
     <aside class="sidebar">
         <div class="sidebar-header">Knowledge Base</div>
         <ul class="article-list">
-            <!-- You can add up to 100+ items here easily. Just change data-filename -->
-            <li><a class="article-link" data-filename="article1.html">Introduction to the System</a></li>
-            <li><a class="article-link" data-filename="article2.html">Getting Started Guide</a></li>
-            <li><a class="article-link" data-filename="article3.html">Advanced Configurations</a></li>
-            <li><a class="article-link" data-filename="article4.html">Troubleshooting Common Issues</a></li>
-            <!-- Add more as needed: article5.html, article6.html... -->
-        </ul>
+            <li><a class="article-link" href="#article1">Introduction to the System</a></li>
+            <li><a class="article-link" href="#article2">Getting Started Guide</a></li>
+            <li><a class="article-link" href="#article3">Advanced Configurations</a></li>
+            <li><a class="article-link" href="#article4">Troubleshooting Common Issues</a></li>
+            </ul>
     </aside>
 
-    <!-- CONTENT DISPLAY VIEWPORT -->
     <main class="content-area">
         <article class="article-body" id="content-viewport">
-            <!-- DEFAULT GENERAL DESCRIPTION (Shows when nothing is clicked) -->
             <h1>Welcome to the Knowledge Hub</h1>
             <p style="margin-top: 20px; font-size: 1.1rem; color: #4a5568;">
                 Select any article from the sidebar menu on the left to pull its full content instantly into this workspace. 
@@ -113,47 +108,69 @@
         </article>
     </main>
 
-    <!-- ASYNCHRONOUS CONTENT ROUTER -->
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const links = document.querySelectorAll('.article-link');
             const viewport = document.getElementById('content-viewport');
 
-            links.forEach(link => {
-                link.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    
-                    // 1. Visually manage active class state
+            // Save the default welcome screen HTML markup 
+            const defaultContent = viewport.innerHTML;
+
+            // Main routing logic engine
+            function loadArticle(articleId) {
+                // If the URL has no hash pathing, reset to the default introductory description screen
+                if (!articleId) {
+                    viewport.innerHTML = defaultContent;
                     links.forEach(l => l.classList.remove('active'));
-                    this.classList.add('active');
+                    return;
+                }
 
-                    // 2. Fetch target file name from custom dataset attribute
-                    const fileName = this.getAttribute('data-filename');
-                    
-                    // 3. Optional: Show quick visual feedback while fetching
-                    viewport.innerHTML = '<p class="loading">Loading content...</p>';
-
-                    // 4. Fire Fetch request into your local /articles folder
-                    fetch(`articles/${fileName}`)
-                        .then(response => {
-                            if (!response.ok) {
-                                throw new Error(`Could not find "${fileName}" inside the articles folder.`);
-                            }
-                            return response.text(); // Convert raw text stream to parseable HTML string
-                        })
-                        .then(htmlContent => {
-                            // 5. Safely inject the loaded template fragment directly into the page layout
-                            viewport.innerHTML = htmlContent;
-                        })
-                        .catch(error => {
-                            viewport.innerHTML = `
-                                <div class="error-msg">
-                                    <h3>Failed to load document</h3>
-                                    <p>${error.message}</p>
-                                </div>`;
-                        });
+                // Match the visual 'active' styling to the correct sidebar link element
+                links.forEach(l => {
+                    const targetHash = l.getAttribute('href');
+                    if (targetHash === `#${articleId}`) {
+                        l.classList.add('active');
+                    } else {
+                        l.classList.remove('active');
+                    }
                 });
+
+                // Display a fast loading message placeholder text
+                viewport.innerHTML = '<p class="loading">Loading content...</p>';
+
+                // Target and fetch the corresponding HTML fragment inside the articles folder
+                fetch(`articles/${articleId}.html`)
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error(`Could not find the file "${articleId}.html" inside your articles folder.`);
+                        }
+                        return response.text();
+                    })
+                    .then(htmlContent => {
+                        // Inject the dynamic content string cleanly into the structure viewport container
+                        viewport.innerHTML = htmlContent;
+                        
+                        // Scroll back to the top of the main display frame so long pages load cleanly
+                        document.querySelector('.content-area').scrollTop = 0;
+                    })
+                    .catch(error => {
+                        viewport.innerHTML = `
+                            <div class="error-msg">
+                                <h3>Failed to load document</h3>
+                                <p>${error.message}</p>
+                            </div>`;
+                    });
+            }
+
+            // ROUTE TRIGGER 1: Fire whenever browser hash parameters modify (clicking, back button)
+            window.addEventListener('hashchange', () => {
+                const currentHash = window.location.hash.substring(1); // Drop the leading "#"
+                loadArticle(currentHash);
             });
+
+            // ROUTE TRIGGER 2: Fire instantly on initial window load (Handles direct entry via shared links)
+            const initialHash = window.location.hash.substring(1);
+            loadArticle(initialHash);
         });
     </script>
 </body>
