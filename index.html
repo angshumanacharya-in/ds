@@ -56,7 +56,7 @@
             color: #2b6cb0;
             font-weight: 600;
             border-left: 4px solid #3182ce;
-            padding-left: 16px; /* Balance the border width */
+            padding-left: 16px;
         }
 
         /* Main Content Viewport */
@@ -91,11 +91,11 @@
     <aside class="sidebar">
         <div class="sidebar-header">Knowledge Base</div>
         <ul class="article-list">
-            <li><a class="article-link" href="#article1">Introduction to the System</a></li>
-            <li><a class="article-link" href="#article2">Getting Started Guide</a></li>
-            <li><a class="article-link" href="#article3">Advanced Configurations</a></li>
-            <li><a class="article-link" href="#article4">Troubleshooting Common Issues</a></li>
-            </ul>
+            <li><a class="article-link" href="#quantum-computing">Introduction to Quantum Systems</a></li>
+            <li><a class="article-link" href="#system-requirements">System Requirements Guide</a></li>
+            <li><a class="article-link" href="#advanced-configurations">Advanced Configurations</a></li>
+            <li><a class="article-link" href="#troubleshooting-logs">Troubleshooting Common Issues</a></li>
+        </ul>
     </aside>
 
     <main class="content-area">
@@ -112,20 +112,15 @@
         document.addEventListener('DOMContentLoaded', () => {
             const links = document.querySelectorAll('.article-link');
             const viewport = document.getElementById('content-viewport');
-
-            // Save the default welcome screen HTML markup 
             const defaultContent = viewport.innerHTML;
 
-            // Main routing logic engine
             function loadArticle(articleId) {
-                // If the URL has no hash pathing, reset to the default introductory description screen
                 if (!articleId) {
                     viewport.innerHTML = defaultContent;
                     links.forEach(l => l.classList.remove('active'));
                     return;
                 }
 
-                // Match the visual 'active' styling to the correct sidebar link element
                 links.forEach(l => {
                     const targetHash = l.getAttribute('href');
                     if (targetHash === `#${articleId}`) {
@@ -135,10 +130,9 @@
                     }
                 });
 
-                // Display a fast loading message placeholder text
                 viewport.innerHTML = '<p class="loading">Loading content...</p>';
 
-                // Target and fetch the corresponding HTML fragment inside the articles folder
+                // Dynamically fetches the file based on the URL slug (e.g., articles/quantum-computing.html)
                 fetch(`articles/${articleId}.html`)
                     .then(response => {
                         if (!response.ok) {
@@ -147,10 +141,7 @@
                         return response.text();
                     })
                     .then(htmlContent => {
-                        // Inject the dynamic content string cleanly into the structure viewport container
                         viewport.innerHTML = htmlContent;
-                        
-                        // Scroll back to the top of the main display frame so long pages load cleanly
                         document.querySelector('.content-area').scrollTop = 0;
                     })
                     .catch(error => {
@@ -162,13 +153,11 @@
                     });
             }
 
-            // ROUTE TRIGGER 1: Fire whenever browser hash parameters modify (clicking, back button)
             window.addEventListener('hashchange', () => {
-                const currentHash = window.location.hash.substring(1); // Drop the leading "#"
+                const currentHash = window.location.hash.substring(1);
                 loadArticle(currentHash);
             });
 
-            // ROUTE TRIGGER 2: Fire instantly on initial window load (Handles direct entry via shared links)
             const initialHash = window.location.hash.substring(1);
             loadArticle(initialHash);
         });
