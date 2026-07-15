@@ -91,10 +91,10 @@
     <aside class="sidebar">
         <div class="sidebar-header">Knowledge Base</div>
         <ul class="article-list">
-            <li><a class="article-link" href="/quantum-computing">Introduction to Quantum Systems</a></li>
-            <li><a class="article-link" href="/system-requirements">System Requirements Guide</a></li>
-            <li><a class="article-link" href="/advanced-configurations">Advanced Configurations</a></li>
-            <li><a class="article-link" href="/troubleshooting-logs">Troubleshooting Common Issues</a></li>
+            <li><a class="article-link" href="quantum-computing">Introduction to Quantum Systems</a></li>
+            <li><a class="article-link" href="system-requirements">System Requirements Guide</a></li>
+            <li><a class="article-link" href="advanced-configurations">Advanced Configurations</a></li>
+            <li><a class="article-link" href="troubleshooting-logs">Troubleshooting Common Issues</a></li>
         </ul>
     </aside>
 
@@ -114,13 +114,17 @@
             const viewport = document.getElementById('content-viewport');
             const defaultContent = viewport.innerHTML;
 
-            // Helper function to extract the article ID from the URL path
+            // Dynamically detects the base folder path so it works in subdirectories
+            const baseFolder = window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/') + 1);
+
             function getArticleIdFromPath() {
-                const path = window.location.pathname;
-                // Splitting path and getting the last segment
-                const segment = path.split('/').filter(Boolean).pop();
-                // Return null if we are at the root index page
-                return (segment && segment !== 'index.html') ? segment : null;
+                const currentPath = window.location.pathname;
+                // Strip the base folder and 'index.html' to isolate just the article name
+                let relativePath = currentPath.replace(baseFolder, '');
+                if (relativePath === 'index.html' || relativePath === '') {
+                    return null;
+                }
+                return relativePath;
             }
 
             function loadArticle(articleId) {
@@ -131,8 +135,8 @@
                 }
 
                 links.forEach(l => {
-                    const targetPath = l.getAttribute('href');
-                    if (targetPath === `/${articleId}`) {
+                    const targetAttr = l.getAttribute('href');
+                    if (targetAttr === articleId) {
                         l.classList.add('active');
                     } else {
                         l.classList.remove('active');
@@ -161,28 +165,27 @@
                     });
             }
 
-            // 1. Intercept link click events to prevent full page reloads
+            // Intercept link clicks
             links.forEach(link => {
                 link.addEventListener('click', (e) => {
                     e.preventDefault();
-                    const targetPath = link.getAttribute('href');
+                    const targetArticle = link.getAttribute('href');
                     
-                    // Push the clean URL to the browser history
-                    history.pushState(null, '', targetPath);
+                    // Create the proper path relative to the active folder
+                    const newUrl = baseFolder + targetArticle;
+                    history.pushState(null, '', newUrl);
                     
-                    // Load the content dynamically
-                    const articleId = targetPath.replace('/', '');
-                    loadArticle(articleId);
+                    loadArticle(targetArticle);
                 });
             });
 
-            // 2. Handle browser Back/Forward navigation buttons
+            // Handle back/forward navigation
             window.addEventListener('popstate', () => {
                 const currentArticleId = getArticleIdFromPath();
                 loadArticle(currentArticleId);
             });
 
-            // 3. Process the initial page load execution
+            // Initial load
             const initialArticleId = getArticleIdFromPath();
             loadArticle(initialArticleId);
         });
