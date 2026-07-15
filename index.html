@@ -114,12 +114,20 @@
             const viewport = document.getElementById('content-viewport');
             const defaultContent = viewport.innerHTML;
 
-            // Dynamically detects the base folder path so it works in subdirectories
+            // 1. Check if we were redirected from the 404 page and clean up the query string
+            (function() {
+                const redirect = window.location.search;
+                if (redirect.startsWith('?/')) {
+                    const restoredPath = redirect.slice(2).replace(/~and~/g, '&');
+                    window.history.replaceState(null, null, window.location.pathname.slice(0, -1) + '/' + restoredPath);
+                }
+            })();
+
+            // Dynamically detects the base folder path (handles both local subfolders and Github Pages repos)
             const baseFolder = window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/') + 1);
 
             function getArticleIdFromPath() {
                 const currentPath = window.location.pathname;
-                // Strip the base folder and 'index.html' to isolate just the article name
                 let relativePath = currentPath.replace(baseFolder, '');
                 if (relativePath === 'index.html' || relativePath === '') {
                     return null;
@@ -171,7 +179,6 @@
                     e.preventDefault();
                     const targetArticle = link.getAttribute('href');
                     
-                    // Create the proper path relative to the active folder
                     const newUrl = baseFolder + targetArticle;
                     history.pushState(null, '', newUrl);
                     
@@ -185,7 +192,7 @@
                 loadArticle(currentArticleId);
             });
 
-            // Initial load
+            // Initial load execution
             const initialArticleId = getArticleIdFromPath();
             loadArticle(initialArticleId);
         });
