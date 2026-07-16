@@ -484,7 +484,8 @@
 
                 viewport.innerHTML = '<p class="loading">Loading content...</p>';
 
-                fetch(`articles/${articleId}.html`)
+                // Updated: `{ cache: 'no-store' }` tells the browser to bypass its history cache
+                fetch(`articles/${articleId}.html`, { cache: 'no-store' })
                     .then(response => {
                         if (!response.ok) {
                             throw new Error(`Could not find the file "${articleId}.html" inside your articles folder.`);
